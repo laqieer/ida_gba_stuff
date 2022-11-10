@@ -58,7 +58,7 @@ def add_seg(startea, size, name,bitness=0,seg_cls="CONST",base=0,patch_bytes=Non
     s.align    = idaapi.saRelPara
     s.comb     = idaapi.scPub
     s.type = idaapi.SEG_DATA if seg_cls == "CONST" else  idaapi.SEG_CODE
-    s.perm = idaapi.SEGPERM_EXEC | idaapi.SEGPERM_WRITE | idaapi.SEGPERM_READ
+    s.perm = idaapi.SEGPERM_EXEC | idaapi.SEGPERM_WRITE | idaapi.SEGPERM_READ if seg_cls != "CODE" else 0
     idaapi.add_segm_ex(s, name, seg_cls, idaapi.ADDSEG_NOSREG|idaapi.ADDSEG_OR_DIE)
     if patch_bytes != None :
         for i in range(0,size):
@@ -81,7 +81,7 @@ def load_file(li, neflags, format):
         add_seg(0x5000000, 0x00400,"OBJ",patch_bytes=0)
         add_seg(0x6000000, 0x18000,"VRAM",patch_bytes=0)
         add_seg(0x7000000, 0x00400,"OAM",bitness=1,patch_bytes=0)
-        add_seg(0x8000000, 0x2000000,"ROM",seg_cls="CODE")
+        add_seg(0x8000000, 0x2000000,"ROM",bitness=1,seg_cls="CODE")
 
         #init Entry point
         li.file2base(0, entry_form_ea, entry_to_ea, 1)
