@@ -54,12 +54,13 @@ def show_procs_info():
     Show the total num and range of procs in the game
     """
     proc_list = get_all_procs()
-    print "%d procs in total: from 0x%X to 0x%X" % (len(proc_list), min(proc_list), max(proc_list))
+    print("%d procs in total: from 0x%X to 0x%X" % (len(proc_list), min(proc_list), max(proc_list)))
 def get_end_addr(ea):
     """
     Get end address of a proc
     """
-    return find_binary(ea, SEARCH_DOWN, "00 00 00 00 00 00 00 00")
+    # IDA 9.x: idc.find_binary was removed; find_bytes takes (pattern, start_ea).
+    return find_bytes("00 00 00 00 00 00 00 00", ea)
 
 def make_proc(ea):
     """
@@ -67,7 +68,7 @@ def make_proc(ea):
     """
     create_struct(ea, 8, "proc")
     end = get_end_addr(ea)
-    make_array(ea, (end - ea) / 8 + 1)
+    make_array(ea, (end - ea) // 8 + 1)   # // : integer count for make_array (Python 3)
 
 def make_all_procs():
     """
@@ -95,7 +96,7 @@ def make_all_functions_in_proc(ea):
     Make all functions in a proc
     """
     for func in get_all_functions_in_proc(ea):
-        MakeFunction(func)
+        add_func(func)   # IDA 9.x: idc.MakeFunction was removed; use add_func
         
 def make_all_functions_in_all_procs():
     """
@@ -109,7 +110,10 @@ def name_proc(ea):
     Name a proc
     """
     if get_dword(ea) == 1:
-        set_name(ea, "proc_%s" % GetString(get_dword(ea+4)))
+        # IDA 9.x: idc.GetString was removed; get_strlit_contents returns bytes.
+        name = get_strlit_contents(get_dword(ea + 4))
+        if name is not None:
+            set_name(ea, "proc_%s" % name.decode("ascii", "replace"))
 
 def name_all_procs(ea):
     """
@@ -120,7 +124,7 @@ def name_all_procs(ea):
 
 def main():
     procs = get_all_procs()
-    print "%d procs in total: from 0x%X to 0x%X" % (len(procs), min(procs), max(procs))
+    print("%d procs in total: from 0x%X to 0x%X" % (len(procs), min(procs), max(procs)))
     for proc in procs:
         name_proc(proc)
         make_proc(proc)
