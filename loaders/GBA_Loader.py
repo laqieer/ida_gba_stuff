@@ -4,6 +4,7 @@ Thank's to SiD3W4y/GhidraGBA and LIJI32/gameboy.py
 @thorodin-roth
 
 Ported to IDA 7.7 by laqieer
+Updated for IDA 9.3 by laqieer (works in both the GUI and headless idalib)
 '''
 
 import idaapi
@@ -13,6 +14,8 @@ import struct
 import ida_funcs
 import ida_bytes
 import ida_lines
+import ida_ida
+import ida_kernwin
 
 ROM_SIGNATURE_OFFSET = 0xb2
 ROM_SIGNATURE        = b"\x96"
@@ -66,7 +69,7 @@ def add_seg(startea, size, name,bitness=0,seg_cls="CONST",base=0,patch_bytes=Non
     
 def load_file(li, neflags, format):
     if format != RomFormatName:
-        Warning("Unkown format name: '%s'" % format)
+        ida_kernwin.warning("Unknown format name: '%s'" % format)
         return 0
 
     size = li.size()
@@ -87,8 +90,11 @@ def load_file(li, neflags, format):
         li.file2base(0, entry_form_ea, entry_to_ea, 1)
         ida_funcs.add_func(entry_form_ea)
         idaapi.add_entry(EntryPoint, EntryPoint, "start", 1)
-        idaapi.cvar.inf.startIP = EntryPoint
-        idaapi.cvar.inf.beginEA = EntryPoint
+        # IDA 9.x: the `idaapi.cvar.inf` struct is no longer writable like this
+        # (and is None under headless idalib). Use the inf_* setters, which work
+        # in both the GUI and idalib.
+        ida_ida.inf_set_start_ea(EntryPoint)
+        ida_ida.inf_set_start_ip(EntryPoint)
 
         ida_lines.add_extra_cmt(ROM_START, True, "ROM HEADER")
 

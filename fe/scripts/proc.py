@@ -95,7 +95,7 @@ def make_all_functions_in_proc(ea):
     Make all functions in a proc
     """
     for func in get_all_functions_in_proc(ea):
-        MakeFunction(func)
+        add_func(func)   # IDA 9.x: idc.MakeFunction was removed; use add_func
         
 def make_all_functions_in_all_procs():
     """
